@@ -2,6 +2,8 @@
 #
 .DS_Store
 
+.history
+
 # npm / yarn
 node_modules/
 npm-debug.log

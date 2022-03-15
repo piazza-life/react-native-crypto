@@ -122,7 +122,8 @@ public class RSA {
     // This function will be called by encrypt and encrypt64
     private byte[] encrypt(byte[] data) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException {
         String encodedMessage = null;
-        final Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
+        // final Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding");
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
         byte[] cipherBytes = cipher.doFinal(data);
         return cipherBytes;
@@ -228,11 +229,15 @@ public class RSA {
     private PublicKey pkcs1ToPublicKey(String publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         Reader keyReader = null;
         try {
-            keyReader = new StringReader(publicKey);
-            PEMParser pemParser = new PEMParser(keyReader);
-            SubjectPublicKeyInfo subjectPublicKeyInfo = (SubjectPublicKeyInfo) pemParser.readObject();
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(subjectPublicKeyInfo.getEncoded());
-            return KeyFactory.getInstance("RSA").generatePublic(spec);
+            byte[] buffer = Base64.decode(publicKey.getBytes(), Base64.DEFAULT);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(buffer);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(keySpec);
+            // keyReader = new StringReader(publicKey);
+            // PEMParser pemParser = new PEMParser(keyReader);
+            // SubjectPublicKeyInfo subjectPublicKeyInfo = (SubjectPublicKeyInfo) pemParser.readObject();
+            // X509EncodedKeySpec spec = new X509EncodedKeySpec(subjectPublicKeyInfo.getEncoded());
+            // return KeyFactory.getInstance("RSA").generatePublic(spec);
                } finally {
             if (keyReader != null) {
                 keyReader.close();
@@ -266,7 +271,7 @@ public class RSA {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
         KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(this.keyTag, null);
-        
+
         if (privateKeyEntry != null) {
             this.privateKey = privateKeyEntry.getPrivateKey();
             this.publicKey = privateKeyEntry.getCertificate().getPublicKey();
